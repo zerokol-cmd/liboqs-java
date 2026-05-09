@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["**"]
   repository_dispatch:
-    types:["**"]
+    types: ["**"]
 
 jobs:
   workflowcheck:
@@ -165,7 +165,7 @@ jobs:
 
   cross-platform-jar:
     name: Build cross-platform JAR
-    needs:[linux, macos, windows]
+    needs: [linux, macos, windows]
     runs-on: ubuntu-latest
     steps:
       - name: Set up JDK
