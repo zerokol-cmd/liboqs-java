@@ -3,10 +3,11 @@
   <groupId>org.openquantumsafe</groupId>
   <artifactId>liboqs-java</artifactId>
   <versioning>
-    <release>master</release>
+    <release>3.0</release>
     <versions>
       <version>master</version>
+      <version>3.0</version>
     </versions>
-    <lastUpdated>20260509212022</lastUpdated>
+    <lastUpdated>20260509214444</lastUpdated>
   </versioning>
 </metadata>
