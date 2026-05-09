@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: ["**"]
   repository_dispatch:
-    types: ["**"]
+    types:["**"]
 
 jobs:
   workflowcheck:
@@ -165,7 +165,7 @@ jobs:
 
   cross-platform-jar:
     name: Build cross-platform JAR
-    needs: [linux, macos, windows]
+    needs:[linux, macos, windows]
     runs-on: ubuntu-latest
     steps:
       - name: Set up JDK
@@ -215,4 +215,52 @@ jobs:
         with:
           name: liboqs-java-crossplatform
           path: build-jar/liboqs-java.jar
-          
+
+  publish:
+    name: Publish to GitHub Maven Repo
+    needs: cross-platform-jar
+    # Optional: Only run this on push events (avoids publishing from unmerged pull requests)
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download cross-platform JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: liboqs-java-crossplatform
+          path: target/
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Install to local Maven repo (gh-pages)
+        run: |
+          mvn install:install-file \
+            -Dfile=target/liboqs-java.jar \
+            -DgroupId=org.openquantumsafe \
+            -DartifactId=liboqs-java \
+            -Dversion=${{ github.ref_name }} \
+            -Dpackaging=jar \
+            -DlocalRepositoryPath=${{ github.workspace }}/gh-pages \
+            -DcreateChecksum=true
+
+      - name: Push to gh-pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish ${{ github.ref_name }}"
+          git push
