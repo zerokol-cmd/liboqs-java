@@ -44,6 +44,16 @@ jobs:
           javac -cp target/liboqs-java.jar examples/KEMExample.java &&
           javac -cp target/liboqs-java.jar examples/SigExample.java &&
           javac -cp target/liboqs-java.jar examples/RandExample.java
+      - name: Upload Linux native libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-natives
+          path: target/*.so
+      - name: Upload Java JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: java-jar
+          path: target/liboqs-java.jar
 
   macos:
     needs: workflowcheck
@@ -82,6 +92,11 @@ jobs:
           javac -cp target/liboqs-java.jar examples/KEMExample.java &&
           javac -cp target/liboqs-java.jar examples/SigExample.java &&
           javac -cp target/liboqs-java.jar examples/RandExample.java
+      - name: Upload macOS native libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-natives
+          path: target/*.jnilib
 
   windows:
     needs: workflowcheck
@@ -137,3 +152,61 @@ jobs:
           javac -cp target\liboqs-java.jar examples\KEMExample.java
           javac -cp target\liboqs-java.jar examples\SigExample.java
           javac -cp target\liboqs-java.jar examples\RandExample.java
+      - name: Upload Windows native libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-natives
+          path: target/*.dll
+
+  cross-platform-jar:
+    name: Build cross-platform JAR
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
+      - name: Download Java JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: java-jar
+          path: build-jar
+
+      - name: Download Linux natives
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-natives
+          path: natives/linux
+
+      - name: Download macOS natives
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-natives
+          path: natives/macos
+
+      - name: Download Windows natives
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-natives
+          path: natives/windows
+
+      - name: Package fat JAR
+        run: |
+          cd build-jar
+          # Copy all retrieved native shared libraries to root execution directory
+          find ../natives -type f \( -name "*.so" -o -name "*.jnilib" -o -name "*.dylib" -o -name "*.dll" \) -exec cp {} . \;
+          # Update the downloaded original JAR by appending the native libraries
+          for file in *.so *.jnilib *.dylib *.dll; do
+            if [ -f "$file" ]; then
+              jar uf liboqs-java.jar "$file"
+            fi
+          done
+
+      - name: Upload cross-platform JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: liboqs-java-crossplatform
+          path: build-jar/liboqs-java.jar
