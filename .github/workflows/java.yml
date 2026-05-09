@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-natives
-          path: build/*.so
+          path: target/classes/*.so
           if-no-files-found: error
       - name: Upload Java JAR
         uses: actions/upload-artifact@v4
@@ -98,8 +98,8 @@ jobs:
         with:
           name: macos-natives
           path: |
-            build/*.jnilib
-            build/*.dylib
+            target/classes/*.jnilib
+            target/classes/*.dylib
           if-no-files-found: error
 
   windows:
@@ -160,7 +160,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-natives
-          path: build/*.dll
+          path: target/classes/*.dll
           if-no-files-found: error
 
   cross-platform-jar:
@@ -215,3 +215,4 @@ jobs:
         with:
           name: liboqs-java-crossplatform
           path: build-jar/liboqs-java.jar
+          
