@@ -1,0 +1,43 @@
+# .github/workflows/publish.yml
+name: Publish to GitHub Maven Repo
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # needed to push to gh-pages
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Checkout gh-pages branch into subdirectory
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Build and deploy to local repo dir
+        run: |
+          mvn deploy \
+            -DaltDeploymentRepository=github::default::file://${{ github.workspace }}/gh-pages \
+            --no-transfer-progress
+
+      - name: Push to gh-pages
+        run: |
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Publish Maven artifacts from ${{ github.sha }}" || echo "Nothing to commit"
+          git push
