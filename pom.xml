@@ -222,4 +222,11 @@
             </plugin>
         </plugins>
     </build>
+    <distributionManagement>
+      <repository>
+        <id>github</id>
+        <name>GitHub Maven Packages</name>
+        <url>https://zerokol-cmd.github.io/liboqs-java</url>
+      </repository>
+    </distributionManagement>
 </project>
