@@ -245,13 +245,17 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Install to local Maven repo (gh-pages)
+      - name: Get version from POM
+        id: get-version
+        run: echo "version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_OUTPUT
+
+      - name: Install to gh-pages
         run: |
           mvn install:install-file \
             -Dfile=target/liboqs-java.jar \
             -DgroupId=org.openquantumsafe \
             -DartifactId=liboqs-java \
-            -Dversion=${{ github.ref_name }} \
+            -Dversion=${{ steps.get-version.outputs.version }} \
             -Dpackaging=jar \
             -DlocalRepositoryPath=${{ github.workspace }}/gh-pages \
             -DcreateChecksum=true
