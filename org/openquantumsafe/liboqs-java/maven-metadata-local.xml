@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.openquantumsafe</groupId>
+  <artifactId>liboqs-java</artifactId>
+  <versioning>
+    <release>master</release>
+    <versions>
+      <version>master</version>
+    </versions>
+    <lastUpdated>20260509212022</lastUpdated>
+  </versioning>
+</metadata>
