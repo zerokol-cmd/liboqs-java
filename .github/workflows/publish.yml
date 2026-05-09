@@ -1,16 +1,16 @@
-# .github/workflows/publish.yml
 name: Publish to GitHub Maven Repo
 
 on:
-  release:
-    types: [created]
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Build cross-platform JAR"]  # name of your existing workflow
+    types: [completed]
 
 jobs:
   publish:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write   # needed to push to gh-pages
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -21,17 +21,30 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Checkout gh-pages branch into subdirectory
+      - name: Download cross-platform JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: liboqs-java-crossplatform
+          path: target/
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Checkout gh-pages
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: gh-pages
 
-      - name: Build and deploy to local repo dir
+      - name: Install to local Maven repo (gh-pages)
         run: |
-          mvn deploy \
-            -DaltDeploymentRepository=github::default::file://${{ github.workspace }}/gh-pages \
-            --no-transfer-progress
+          mvn install:install-file \
+            -Dfile=target/liboqs-java.jar \
+            -DgroupId=org.openquantumsafe \
+            -DartifactId=liboqs-java \
+            -Dversion=${{ github.event.workflow_run.head_branch }} \
+            -Dpackaging=jar \
+            -DlocalRepositoryPath=${{ github.workspace }}/gh-pages \
+            -DcreateChecksum=true
 
       - name: Push to gh-pages
         run: |
@@ -39,5 +52,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Publish Maven artifacts from ${{ github.sha }}" || echo "Nothing to commit"
+          git commit -m "Publish ${{ github.event.workflow_run.head_branch }}"
           git push
